@@ -1,73 +1,75 @@
-function updateDateTime() {
-  const now = new Date();
+const start = {
+  x: 0,
+  y: 100,
+};
 
-  const hours = now.getHours();
-  let greeting;
-  if (hours >= 5 && hours < 12) {
-    greeting = 'Доброе утро';
-  } else if (hours >= 12 && hours < 18) {
-    greeting = 'Добрый день';
-  } else if (hours >= 18 && hours < 23) {
-    greeting = 'Добрый вечер';
-  } else {
-    greeting = 'Доброй ночи';
+const end = {
+  x: 500,
+  y: 500,
+};
+
+let animationId = null; // Переменная для хранения ID анимации
+
+const animate = (item, coords) => {
+  if (animationId) {
+    cancelAnimationFrame(animationId); // Отменяем предыдущую анимацию
   }
 
-  const days = [
-    'Воскресенье',
-    'Понедельник',
-    'Вторник',
-    'Среда',
-    'Четверг',
-    'Пятница',
-    'Суббота',
-  ];
-  const dayOfWeek = days[now.getDay()];
+  const step = () => {
+    const currCoords = {
+      x: parseInt(item.style.left, 10),
+      y: parseInt(item.style.top, 10),
+    };
 
-  const options = {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true,
+    // Если координаты совпали, завершаем анимацию
+    if (
+      Math.abs(currCoords.x - coords.x) <= 1 &&
+      Math.abs(currCoords.y - coords.y) <= 1
+    ) {
+      item.style.left = `${coords.x}px`;
+      item.style.top = `${coords.y}px`;
+      animationId = null;
+      return;
+    }
+
+    // Вычисляем направление движения
+    const speed = 2; // Скорость движения (можно изменить)
+    const newX = currCoords.x + Math.sign(coords.x - currCoords.x) * speed;
+    const newY = currCoords.y + Math.sign(coords.y - currCoords.y) * speed;
+
+    item.style.left = `${newX}px`;
+    item.style.top = `${newY}px`;
+
+    animationId = requestAnimationFrame(step);
   };
-  const timeString = now.toLocaleTimeString('ru-RU', options);
 
-  const nextYear = now.getFullYear() + 1;
-  const newYear = new Date(nextYear, 0, 1);
-  const daysUntilNewYear = Math.ceil((newYear - now) / (1000 * 60 * 60 * 24));
+  animationId = requestAnimationFrame(step);
+};
 
-  document.getElementById('greeting').textContent = greeting;
-  document.getElementById('date').textContent = `Сегодня: ${dayOfWeek}`;
-  document.getElementById('time').textContent = `Текущее время: ${timeString}`;
-  document.getElementById(
-    'newYearCountdown',
-  ).textContent = `До нового года осталось ${daysUntilNewYear} дней`;
-}
+const createElement = (tag, textContent) => {
+  const element = document.createElement(tag);
+  element.textContent = textContent;
+  return element;
+};
 
-function createElements() {
-  const container = document.createElement('div');
-  container.id = 'dateTimeContainer';
+const div = document.createElement('div');
+div.classList.add('box');
+div.style = `position: absolute; top: ${start.y}px; left: ${start.x}px; width: 100px; height: 100px; background-color: red;`;
 
-  const greeting = document.createElement('div');
-  greeting.id = 'greeting';
+const startBtn = createElement('button', 'Start');
+startBtn.onclick = () => animate(div, end);
 
-  const date = document.createElement('div');
-  date.id = 'date';
+const endBtn = createElement('button', 'End');
+endBtn.onclick = () => cancelAnimationFrame(animationId);
 
-  const time = document.createElement('div');
-  time.id = 'time';
+const resetBtn = createElement('button', 'Reset');
+resetBtn.onclick = () => {
+  div.style.left = `${start.x}px`;
+  div.style.top = `${start.y}px`;
+  cancelAnimationFrame(animationId);
+};
 
-  const newYearCountdown = document.createElement('div');
-  newYearCountdown.id = 'newYearCountdown';
-
-  container.appendChild(greeting);
-  container.appendChild(date);
-  container.appendChild(time);
-  container.appendChild(newYearCountdown);
-
-  document.body.appendChild(container);
-}
-
-createElements();
-updateDateTime();
-setInterval(updateDateTime, 1000);
+document.body.append(endBtn);
+document.body.append(startBtn);
+document.body.append(resetBtn);
+document.body.append(div);
